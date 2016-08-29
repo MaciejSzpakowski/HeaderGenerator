@@ -1,29 +1,35 @@
 #include "Header.h"
 
-namespace N
+namespace NamespaceTest5
 {
-    class Hip
+    class Test5
     {
     public:
-        bool Test(bool b)
+        Test5()
+        {
+            otherm(false);
+            printf("Test 5 namespace passed\n");
+        }
+
+        bool otherm(bool b)
         {
             return !b;
         }
     };
 }
 
-namespace M
+namespace NamespaceTest6
 {
-    namespace L
+    namespace O
     {
-        namespace K
+        namespace P
         {
-            class FF
+            class Test6
             {
             private:
                 int a;
             public:
-                FF() : a(6) {}
+                Test6() : a(6) { printf("Test %d nested namespace passed\n",get_a()); }
 
                 int get_a()
                 {

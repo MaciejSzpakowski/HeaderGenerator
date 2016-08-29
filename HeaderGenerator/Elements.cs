@@ -34,16 +34,21 @@ namespace HeaderGenerator
         }
     }
 
-    public class Class : IElement
+    /// <summary>
+    /// Class and struct are essentially the same
+    /// </summary>
+    public class ClassStruct : IElement
     {
         public string proto;
         public string name;
         public List<IElement> privateMembers;
         public List<IElement> publicMembers;
         public List<IElement> protectedMembers;
+        public List<IElement> freeMembers; // members than come before any access specifier, useful for structs
 
-        public Class()
+        public ClassStruct()
         {
+            freeMembers = new List<IElement>();
             privateMembers = new List<IElement>();
             publicMembers = new List<IElement>();
             protectedMembers = new List<IElement>();
@@ -54,17 +59,32 @@ namespace HeaderGenerator
             h.AddRange($"\n{proto}\n");
             h.AddRange("{\n");
 
-            h.AddRange("private:\n");
-            foreach (var f in privateMembers)
-                f.Dump(h, cpp, _namespace == "" ? name : _namespace + "::" + name);
+            if (freeMembers.Count > 0)
+            {
+                foreach (var f in freeMembers)
+                    f.Dump(h, cpp, _namespace == "" ? name : _namespace + "::" + name);
+            }
 
-            h.AddRange("protected:\n");
-            foreach (var f in protectedMembers)
-                f.Dump(h, cpp, _namespace == "" ? name : _namespace + "::" + name);
+            if (privateMembers.Count > 0)
+            {
+                h.AddRange("private:\n");
+                foreach (var f in privateMembers)
+                    f.Dump(h, cpp, _namespace == "" ? name : _namespace + "::" + name);
+            }
 
-            h.AddRange("public:\n");
-            foreach (var f in publicMembers)
-                f.Dump(h, cpp, _namespace == "" ? name : _namespace + "::" + name);
+            if (protectedMembers.Count > 0)
+            {
+                h.AddRange("protected:\n");
+                foreach (var f in protectedMembers)
+                    f.Dump(h, cpp, _namespace == "" ? name : _namespace + "::" + name);
+            }
+
+            if (publicMembers.Count > 0)
+            {
+                h.AddRange("public:\n");
+                foreach (var f in publicMembers)
+                    f.Dump(h, cpp, _namespace == "" ? name : _namespace + "::" + name);
+            }
 
             h.AddRange("};\n");
         }

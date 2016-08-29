@@ -1,50 +1,102 @@
 #include "Header.h"
-A::A()
+N::Test9::Test9()
+:num({
+9 }
+
+N::Test9::)
 {
-s = "string";
-        i = 7;
+t1.m3(num.i, "back reference passed\n");
+        }
+
+void N::Test7::Nest::operator()()
+{
+printf("%s", str.c_str());
+            }
+
+N::Test7::Test7()
+{
+str[0].str = "Test 7 ";
+            str[1].str = "nested class and opeartor ";
+            str[2].str = "passed\n";
+
+            str[0]();
+            str[1]();
+            str[2]();
+        }
+
+N::Test8::Test8()
+:str("Test 8 struct passed\n"){
+printf("%s", str.c_str());
+        }
+
+Test1::Test1()
+{
+s = "Test";
+        i = 1;
     }
 
-void A::m1()
+void Test1::m1()
 {
-printf("%s %d\n", s.c_str(), i);
+printf("%s %d passed\n", s.c_str(), i);
     }
 
-B::B()
+int Test1::m2(int k)
 {
-f = 1.1;
-        v.push_back(new A());
+printf("%s %d circular ptr reference passed\n", s.c_str(), k);
+
+        return 0;
     }
 
-void B::m1()
+void Test1::m3(int k, std::string&& str)
 {
-v[0]->m1();
+printf("%s %d %s\n", s.c_str(), k, str.c_str());
     }
 
-void B::m2()
+Test2::Test2()
 {
-printf("%f\n", f);
+f = 2;
+        v.push_back(new Test1());
     }
 
-C::C(int a)
-:val(a)  {
+void Test2::m1()
+{
+m2();
+    }
+
+void Test2::m2()
+{
+v[0]->m2(2);
+    }
+
+Test3::Test3(int a)
+:val(a){
 }
 
-C1::C1(int a)
-:C(a * 2), val2(a)
-    {
-}
+void Test3::m1()
+{
+printf("Test %d one line ctor and ctor arg and initializer list passed\n", val); }
 
-bool N::Hip::Test(bool b)
+Test4::Test4(int a)
+:Test3(4), val2(a){
+printf("Test %d inheritance passed\n", val2);
+    }
+
+NamespaceTest5::Test5::Test5()
+{
+otherm(false);
+            printf("Test 5 namespace passed\n");
+        }
+
+bool NamespaceTest5::Test5::otherm(bool b)
 {
 return !b;
         }
 
-M::L::K::FF::FF()
-:a(6) {
-}
+NamespaceTest6::O::P::Test6::Test6()
+:a(6){
+printf("Test %d nested namespace passed\n",get_a()); }
 
-int M::L::K::FF::get_a()
+int NamespaceTest6::O::P::Test6::get_a()
 {
 return a;
                 }

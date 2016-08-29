@@ -18,6 +18,14 @@ namespace HeaderGenerator
             return str.Substring(0, str.Length - n);
         }
 
+        /// <summary>
+        /// IndexOf will throw exception if trying to match a string near the end so I need this wrapper
+        /// </summary>
+        /// <param name="str"></param>
+        /// <param name="value"></param>
+        /// <param name="startAt"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
         public static int _IndexOf(this string str, string value, int startAt, int count)
         {
             try

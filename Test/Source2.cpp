@@ -2,25 +2,25 @@
 #include <vector>
 #include <cstdio>
 
-class B
+class Test2
 {
 private:
-    std::vector<A*> v;
+    std::vector<Test1*> v;
     float f;
 public:
-    B() 
+    Test2()
     {
-        f = 1.1;
-        v.push_back(new A());
+        f = 2;
+        v.push_back(new Test1());
     }
 
     void m1() 
     {
-        v[0]->m1();
+        m2();
     }
 
     void m2()     
     {
-        printf("%f\n", f);
+        v[0]->m2(2);
     }
 };

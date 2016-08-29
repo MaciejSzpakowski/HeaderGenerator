@@ -11,17 +11,19 @@ namespace HeaderGenerator
     {
         List<Token> tokens;
         List<IElement> globals;
-        List<string> classes;
+        List<string> classStructPrototypes;
         List<Include> includes;
         int next;
+        Token nextToken;
 
         public Parser(List<Token> t)
         {
             globals = new List<IElement>();
-            classes = new List<string>();
+            classStructPrototypes = new List<string>();
             tokens = t;
             includes = new List<Include>();
             next = 0;
+            nextToken = tokens[0];
             Parse();
         }
 
@@ -30,12 +32,27 @@ namespace HeaderGenerator
             return tokens[next];
         }
 
+        private void ExtractClassStruct()
+        {
+            foreach (var e in globals)
+            {
+
+            }
+        }
+
         private void Match(TokenType token)
         {
             if (Next().type != token)
                 throw new Exception("Tokens do not match");
 
             next++;
+            try
+            {
+                nextToken = tokens[next];
+            }
+            catch
+            {
+            }
         }
 
         private void Parse()
@@ -77,8 +94,8 @@ namespace HeaderGenerator
 
         private IElement Element()
         {
-            if (Next().type == TokenType.ClassProto)
-                return Class();
+            if (Next().type == TokenType.ClassStructProto)
+                return ClassStruct();
             else if (Next().type == TokenType.Include)
             {
                 if (Next().value.Contains("<")) // for now parse only <> includes
@@ -102,21 +119,26 @@ namespace HeaderGenerator
                 throw new Exception("Unknown global token");
         }
 
-        private Class Class()
+        private ClassStruct ClassStruct()
         {
             Token _proto = Next();
-            Match(TokenType.ClassProto);
-            var match = Regex.Match(_proto.value, "class( )+[_a-zA-Z0-9]+");
-            string _name = match.Value.Remove(0,"class".Length).Trim(' ');
-            classes.Add(_name);
-            Class element = new Class() { proto = _proto.value, name = _name };
+            Match(TokenType.ClassStructProto);
+            var match = Regex.Match(_proto.value, "(class|struct)( )+[_a-zA-Z0-9]+");
+            string _name = match.Value.Replace("class", "").Replace("struct", "").Trim(' ');
+            
+            if(_proto.value.StartsWith("class"))
+                classStructPrototypes.Add("class " + _name);
+            else
+                classStructPrototypes.Add("struct " + _name);
+
+            ClassStruct element = new ClassStruct() { proto = _proto.value, name = _name };
 
             ClassBody(element);
 
             return element;
         }
 
-        private void ClassBody(Class element)
+        private void ClassBody(ClassStruct element)
         {
             Match(TokenType.OpenBrace);
 
@@ -138,7 +160,9 @@ namespace HeaderGenerator
                     element.protectedMembers.AddRange(Members());
                 }
                 else
-                    throw new Exception("unknown token");
+                {
+                    element.freeMembers.AddRange(Members());
+                }
             }
 
             Match(TokenType.CloseBraceSemicolon);
@@ -159,15 +183,18 @@ namespace HeaderGenerator
 
         private IElement Member()
         {
-            if (Next().type == TokenType.ClassField)
+            if (Next().type == TokenType.ClassStructProto)
+            {
+                return ClassStruct();
+            }
+            else if (Next().type == TokenType.ClassStructField)
             {
                 Field field = new Field() { proto = Next().value };
-                Match(TokenType.ClassField);
+                Match(TokenType.ClassStructField);
                 return field;
             }
             else if (Next().type == TokenType.MethodProto)
             {
-
                 Method method = new Method() { proto = Next().value, initializerList = string.Empty };
                 Match(TokenType.MethodProto);
 
@@ -191,14 +218,17 @@ namespace HeaderGenerator
                 throw new Exception("Unknown token");
         }
 
-        public void Dump(List<char> h, List<char> cpp)
-        {            
+        private void ResolveDependencies(List<IElement> siblings)
+        {
+        }
 
+        public void Dump(List<char> h, List<char> cpp)
+        {
             foreach (var e in includes)
                 e.Dump(h, cpp, "");
 
-            foreach (var s in classes)
-                h.AddRange("class " + s + ";\n");
+            foreach (var s in classStructPrototypes)
+                h.AddRange(s + ";\n");
 
             foreach(var e in globals)
                 e.Dump(h, cpp, "");

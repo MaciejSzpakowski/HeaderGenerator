@@ -10,7 +10,9 @@ namespace HeaderGenerator
 {
     public enum TokenType
     {
-        ClassProto, OpenBrace, CloseBrace, CloseBraceSemicolon, ClassField, MethodProto, MethodBody, PrivateKeyword, PublicKeyword, Include, ProtectedKeyword, EOT, InitializerList, NamespaceKeyword
+        ClassStructProto, OpenBrace, CloseBrace, CloseBraceSemicolon, ClassStructField, MethodProto,
+        MethodBody, PrivateKeyword, PublicKeyword, Include, ProtectedKeyword, EOT,
+        InitializerList, NamespaceKeyword
     }
 
     public class Token
@@ -44,29 +46,42 @@ namespace HeaderGenerator
         private void Tokenize()
         {
             file = File.ReadAllText(filename);
-            string id = "[_a-zA-Z0-9<>\\*]+( )*";
-            string spc = "( )*";
+            Match memberMatch = null;
 
             while (index < file.Length)
             {
                 ///// DEBUG
-                var substr = file.Substring(index);
+                //var substr = file.Substring(index);
+                //Token t;
+                //try
+                //{
+                //    t = tokens.Last();
+                //}
+                //catch
+                //{
+                //}
 
                 // skip spaces
                 ConsumeWhiteSpace();
 
-                if (file._IndexOf("class", index, "class".Length) == index)
+                if (tokens.Count > 2 && (tokens[tokens.Count - 2].type == TokenType.MethodProto || tokens[tokens.Count - 2].type == TokenType.InitializerList)
+                    && tokens[tokens.Count - 1].type == TokenType.OpenBrace)
                 {
-                    var match = new Regex($"\\Gclass {spc}{id}:?({spc},?{spc}(public|private|protected){spc}{id})*[\n\r ]*{{").Match(file, index);
+                    tokens.Add(FindMethodBody());
+                }
+                else if (file._IndexOf("class", index, "class".Length) == index || file._IndexOf("struct", index, "struct".Length) == index)
+                {
+                    var match = new Regex("\\G((class)|(struct))[^\\{]*\\{")
+                        .Match(file, index);
                     var proto = match.Value.Pop(1);
                     proto = proto.Trim(' ', '\n', '\r');
-                    tokens.Add(new Token() { type = TokenType.ClassProto, value = proto });
+                    tokens.Add(new Token() { type = TokenType.ClassStructProto, value = proto });
 
                     index += proto.Length;
                 }
                 else if (file._IndexOf("#include", index, "#include".Length) == index)
                 {
-                    var match = new Regex($"\\G#include {spc}(\"|<)[_a-zA-Z0-9\\.]+( )*(\"|>)").Match(file, index);
+                    var match = new Regex("\\G#include ( )*(\"|<)[_a-zA-Z0-9\\.]+( )*(\"|>)").Match(file, index);
                     tokens.Add(new Token() { type = TokenType.Include, value = match.Value });
 
                     index += match.Value.Length;
@@ -89,14 +104,6 @@ namespace HeaderGenerator
 
                     index += "protected:".Length;
                 }
-                else if (tokens.Count > 2 && (tokens[tokens.Count - 2].type == TokenType.MethodProto || tokens[tokens.Count - 2].type == TokenType.InitializerList)
-                    && tokens[tokens.Count - 1].type == TokenType.OpenBrace)
-                {
-                    tokens.Add(FindMethodBody());
-                    tokens.Add(new Token() { type = TokenType.CloseBrace, value = "}" });
-
-                    index++;
-                }
                 else if (file[index] == '{')
                 {
                     tokens.Add(new Token() { type = TokenType.OpenBrace, value = "{" });
@@ -118,11 +125,10 @@ namespace HeaderGenerator
                 else if (file[index] == ':')
                 {
                     index++;
-                    while (file[index] == ' ' || file[index] == '\n' || file[index] == '\r')
-                        index++;
+                    ConsumeWhiteSpace();
 
                     var match = new Regex($"\\G[^{{]*").Match(file, index);
-                    tokens.Add(new Token() { type = TokenType.InitializerList, value = match.Value });
+                    tokens.Add(new Token() { type = TokenType.InitializerList, value = match.Value.Trim(' ', '\n', '\r') });
 
                     index += match.Value.Length;
                 }
@@ -131,38 +137,27 @@ namespace HeaderGenerator
                     index += "namespace".Length;
                     ConsumeWhiteSpace();
 
-                    var match = new Regex($"\\G{id}").Match(file, index);
-                    tokens.Add(new Token() { type = TokenType.NamespaceKeyword, value = match.Value});
+                    var match = new Regex($"\\G[_a-zA-Z0-9]+").Match(file, index);
+                    tokens.Add(new Token() { type = TokenType.NamespaceKeyword, value = match.Value });
 
                     index += match.Value.Length;
                 }
+                // at the end check for method proto or field
+                else if ((memberMatch = new Regex("([^\\);]*\\)[ \\n\\r]*:)|([^\\{;]+(\\{|;))").Match(file, index)).Value.Contains(";"))
+                {
+                    tokens.Add(new Token() { type = TokenType.ClassStructField, value = memberMatch.Value });
+
+                    index += memberMatch.Value.Length;
+                }
+                else if (memberMatch.Value.Contains("{") || memberMatch.Value.Contains(":"))
+                {
+                    tokens.Add(new Token() { type = TokenType.MethodProto, value = memberMatch.Value.Pop(1).Trim(' ', '\n', '\r') });
+
+                    index += memberMatch.Value.Length - 1;
+                }
                 else
-                    tokens.Add(FindNextToken());
+                    throw new Exception("Unknown string " + index);
             }
-        }
-
-        private Token FindNextToken()
-        {
-            string id = "[_a-zA-Z0-9<>\\*:]+( )*";
-            string spc = "( )*";
-
-            var matchMethodProto = new Regex($"\\G({id} )?{id}\\((,?{spc}{id} {id})*\\)").Match(file, index);
-            var matchField = new Regex($"\\G{id} {id};").Match(file, index);
-
-            if (matchField.Value != "")
-            {
-                index += matchField.Value.Length;
-
-                return new Token() { type = TokenType.ClassField, value = matchField.Value };
-            }
-            else if (matchMethodProto.Value != "")
-            {
-                index += matchMethodProto.Value.Length;
-
-                return new Token() { type = TokenType.MethodProto, value = matchMethodProto.Value };
-            }
-            else
-                throw new Exception("Unknown member " + index);
         }
 
         private Token FindMethodBody()

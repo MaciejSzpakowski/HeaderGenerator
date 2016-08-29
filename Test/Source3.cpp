@@ -1,19 +1,21 @@
 #include "Header.h"
 
-class C
+class Test3
 {
 public:
-    C(int a) :val(a)  {   }
+    Test3(int a) :val(a) {  }
+    void m1() { printf("Test %d one line ctor and ctor arg and initializer list passed\n", val); }
 protected:
     int val;
 };
 
-class C1 : public C
+class Test4 : public Test3
 {
 private:
     int val2;
 public:
-    C1(int a) : C(a * 2), val2(a)
+    Test4(int a) : Test3(4), val2(a)
     {
+        printf("Test %d inheritance passed\n", val2);
     }
 };
