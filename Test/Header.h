@@ -27,33 +27,6 @@ Num num;
 M::TestStruct ts;
 public:
 Test9();
-);
-};
-
-class Test7
-{
-private:
-
-class Nest
-{
-public:
-std::string str;
-void operator()();
-};
-Nest str[3];
-public:
-Test7();
-};
-
-struct Test8
-{
-std::string str;
-Test8();
-};
-
-struct Num
-{
-int i;
 };
 }
 
@@ -132,6 +105,32 @@ int get_a();
 
 namespace N
 {
+
+class Test7
+{
+private:
+
+class Nest
+{
+public:
+std::string str;
+void operator()();
+};
+Nest str[3];
+public:
+Test7();
+};
+
+struct Test8
+{
+std::string str;
+Test8();
+};
+
+struct Num
+{
+int i;
+};
 }
 
 namespace M

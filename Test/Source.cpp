@@ -1,32 +1,7 @@
 #include "Header.h"
 N::Test9::Test9()
-:num({
-9 }
-
-N::Test9::)
-{
+:num({ 9 }){
 t1.m3(num.i, "back reference passed\n");
-        }
-
-void N::Test7::Nest::operator()()
-{
-printf("%s", str.c_str());
-            }
-
-N::Test7::Test7()
-{
-str[0].str = "Test 7 ";
-            str[1].str = "nested class and opeartor ";
-            str[2].str = "passed\n";
-
-            str[0]();
-            str[1]();
-            str[2]();
-        }
-
-N::Test8::Test8()
-:str("Test 8 struct passed\n"){
-printf("%s", str.c_str());
         }
 
 Test1::Test1()
@@ -100,4 +75,25 @@ int NamespaceTest6::O::P::Test6::get_a()
 {
 return a;
                 }
+
+void N::Test7::Nest::operator()()
+{
+printf("%s", str.c_str());
+            }
+
+N::Test7::Test7()
+{
+str[0].str = "Test 7 ";
+            str[1].str = "nested class and opeartor ";
+            str[2].str = "passed\n";
+
+            str[0]();
+            str[1]();
+            str[2]();
+        }
+
+N::Test8::Test8()
+:str("Test 8 struct passed\n"){
+printf("%s", str.c_str());
+        }
 

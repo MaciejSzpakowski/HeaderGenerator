@@ -127,7 +127,7 @@ namespace HeaderGenerator
                     index++;
                     ConsumeWhiteSpace();
 
-                    var match = new Regex($"\\G[^{{]*").Match(file, index);
+                    var match = new Regex("\\G([^\\(\\)\\{\\}]*\\([^\\(\\)]*\\))+[^\\{]*").Match(file, index);
                     tokens.Add(new Token() { type = TokenType.InitializerList, value = match.Value.Trim(' ', '\n', '\r') });
 
                     index += match.Value.Length;
@@ -137,7 +137,7 @@ namespace HeaderGenerator
                     index += "namespace".Length;
                     ConsumeWhiteSpace();
 
-                    var match = new Regex($"\\G[_a-zA-Z0-9]+").Match(file, index);
+                    var match = new Regex("\\G[_a-zA-Z0-9]+").Match(file, index);
                     tokens.Add(new Token() { type = TokenType.NamespaceKeyword, value = match.Value });
 
                     index += match.Value.Length;
